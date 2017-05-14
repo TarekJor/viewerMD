@@ -6,38 +6,41 @@ define(function(require, exports, module) {
 
   var extensionID = "viewerMD"; // ID should be equal to the directory name where the ext. is located
   var TSCORE = require('tscore');
+  var React = require('react');
+  var ReactDOM = require('react-dom');
 
   console.log("Loading " + extensionID);
 
-  var md2htmlConverter;
-  var containerElID;
   var currentFilePath;
-  var $containerElement;
   var extensionDirectory = TSCORE.Config.getExtensionPath() + "/" + extensionID;
+
+  /*return React.createElement('iframe', {
+    sandbox: "allow-same-origin allow-scripts allow-modals",
+    id: "iframeViewer",
+    src: extensionDirectory + "/index.html?&locale=" + TSCORE.currentLanguage
+  }, null);*/
 
   function init(filePath, containerElementID) {
     console.log("Initialization MD Viewer...");
-    containerElID = containerElementID;
-    $containerElement = $('#' + containerElID);
-
     currentFilePath = filePath;
-    $containerElement.empty();
-    $containerElement.css("background-color", "white");
-    $containerElement.append($('<iframe>', {
-      sandbox: "allow-same-origin allow-scripts allow-modals",
-      id: "iframeViewer",
-      //"nwdisable": "",
-      //"nwfaketop": "",
-      "src": extensionDirectory + "/index.html?&locale=" + TSCORE.currentLanguage,
-    }));
 
-    TSCORE.IO.loadTextFilePromise(filePath).then(function(content) {
-      setContent(content);
-    });
+    require([
+      extensionDirectory + '/extension-root.js',
+    ], function(extensionRootComp) {
+      var ExtensionRoot = extensionRootComp.ExtensionRoot;
+      var props = { "iframeSource": extensionDirectory + "/index.html?&locale=" + TSCORE.currentLanguage };
+      ReactDOM.render(
+        React.createElement(ExtensionRoot, props, null), document.getElementById(containerElementID)
+      );
+
+      TSCORE.IO.loadTextFilePromise(filePath).then(function(content) {
+        setContent(content)
+      });
+    })
   }
 
   function setFileType() {
-    console.log("setFileType not supported on this extension");
+    console.log("setFileType not supported on this extension")
   }
 
   function viewerMode(isViewerMode) {
