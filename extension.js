@@ -4,85 +4,86 @@
 define(function(require, exports, module) {
   "use strict";
 
-  var extensionID = "viewerMD"; // ID should be equal to the directory name where the ext. is located
-  var TSCORE = require('tscore');
-  var React = require('react');
-  var ReactDOM = require('react-dom');
+  const TSCORE = require('tscore');
+  const React = require('react');
+  const ReactDOM = require('react-dom');
+  const ExtensionRoot = require('./extension-root').ExtensionRoot;
+  const TestComp = require('./test-comp').TestComp;
+
+  const extensionID = "viewerMD"; // ID should be equal to the directory name where the ext. is located
+  const extensionDirectory = TSCORE.Config.getExtensionPath() + "/" + extensionID;
+  let currentFilePath;
 
   console.log("Loading " + extensionID);
 
-  var currentFilePath;
-  var extensionDirectory = TSCORE.Config.getExtensionPath() + "/" + extensionID;
+  class ViewerMD {
 
-  /*return React.createElement('iframe', {
-    sandbox: "allow-same-origin allow-scripts allow-modals",
-    id: "iframeViewer",
-    src: extensionDirectory + "/index.html?&locale=" + TSCORE.currentLanguage
-  }, null);*/
+    static init(filePath, containerElementID) {
+      console.log("Initialization MD Viewer...");
+      currentFilePath = filePath;
 
-  function init(filePath, containerElementID) {
-    console.log("Initialization MD Viewer...");
-    currentFilePath = filePath;
+      $('#' + containerElementID).empty().css("background-color", "white").append($('<iframe>', {
+        sandbox: "allow-same-origin allow-scripts allow-modals",
+        id: "iframeViewer",
+        "src": extensionDirectory + "/index.html?&locale=" + TSCORE.currentLanguage,
+      }));
 
-    require([
-      extensionDirectory + '/extension-root.js',
-    ], function(extensionRootComp) {
-      var ExtensionRoot = extensionRootComp.ExtensionRoot;
-      var props = { "iframeSource": extensionDirectory + "/index.html?&locale=" + TSCORE.currentLanguage };
+      /*let props = { "iframeSource": extensionDirectory + "/index.html?&locale=" + TSCORE.currentLanguage };
       ReactDOM.render(
         React.createElement(ExtensionRoot, props, null), document.getElementById(containerElementID)
-      );
+      );*/
 
-      TSCORE.IO.loadTextFilePromise(filePath).then(function(content) {
-        setContent(content)
+      TSCORE.IO.loadTextFilePromise(filePath).then((content) => {
+        this.setContent(content)
       });
-    })
-  }
-
-  function setFileType() {
-    console.log("setFileType not supported on this extension")
-  }
-
-  function viewerMode(isViewerMode) {
-    // set readonly
-  }
-
-  function setContent(content) {
-    var UTF8_BOM = "\ufeff";
-
-    // removing the UTF8 bom because it brakes thing like #header1 in the beginning of the document
-    if (content.indexOf(UTF8_BOM) === 0) {
-      content = content.substring(1, content.length);
     }
 
-    var fileDirectory = TSCORE.TagUtils.extractContainingDirectoryPath(currentFilePath);
-
-    if (isWeb) {
-      fileDirectory = TSCORE.TagUtils.extractContainingDirectoryPath(location.href) + "/" + fileDirectory;
+    static setFileType() {
+      console.log("setFileType not supported on this extension")
     }
 
-    var cleanedContent = content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
-    var mdContent = TSCORE.Utils.convertMarkdown(cleanedContent);
+    static viewerMode(isViewerMode) {
+      // set readonly
+    }
 
-    var contentWindow = document.getElementById("iframeViewer").contentWindow;
-    if (typeof contentWindow.setContent === "function") {
-      contentWindow.setContent(mdContent, fileDirectory);
-    } else {
-      // TODO optimize setTimeout
-      window.setTimeout(function() {
+    static setContent(content) {
+      let UTF8_BOM = "\ufeff";
+
+      // removing the UTF8 bom because it brakes thing like #header1 in the beginning of the document
+      if (content.indexOf(UTF8_BOM) === 0) {
+        content = content.substring(1, content.length);
+      }
+
+      let fileDirectory = TSCORE.TagUtils.extractContainingDirectoryPath(currentFilePath);
+
+      if (isWeb) {
+        fileDirectory = TSCORE.TagUtils.extractContainingDirectoryPath(location.href) + "/" + fileDirectory;
+      }
+
+      let cleanedContent = content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+      let mdContent = TSCORE.Utils.convertMarkdown(cleanedContent);
+
+      let contentWindow = document.getElementById("iframeViewer").contentWindow;
+      if (typeof contentWindow.setContent === "function") {
         contentWindow.setContent(mdContent, fileDirectory);
-      }, 500);
+      } else {
+        // TODO optimize setTimeout
+        window.setTimeout(() => {
+          contentWindow.setContent(mdContent, fileDirectory);
+        }, 500);
+      }
     }
+
+    static getContent() {
+      console.log("Not implemented");
+    }
+
   }
 
-  function getContent() {
-    console.log("Not implemented");
-  }
-
-  exports.init = init;
-  exports.getContent = getContent;
-  exports.setContent = setContent;
-  exports.viewerMode = viewerMode;
-  exports.setFileType = setFileType;
+  exports.init = ViewerMD.init;
+  exports.getContent = ViewerMD.getContent;
+  exports.setContent = ViewerMD.setContent;
+  exports.viewerMode = ViewerMD.viewerMode;
+  exports.setFileType = ViewerMD.setFileType;
 
 });
