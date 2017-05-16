@@ -1,15 +1,14 @@
-/* Copyright (c) 2013-2017 The TagSpaces Authors.
+/* Copyright (c) 2013-present The TagSpaces Authors.
  * Use of this source code is governed by the MIT license which can be found in the LICENSE.txt file. */
 
 define(function(require, exports, module) {
   "use strict";
 
   const TSCORE = require('tscore');
-  const React = require('react');
-  const ReactDOM = require('react-dom');
-  const ExtensionRoot = require('./extension-root').ExtensionRoot;
-  const TestComp = require('./test-comp').TestComp;
-
+  //const React = require('react');
+  //const ReactDOM = require('react-dom');
+  //const ExtensionRoot = require('./extension-root').ExtensionRoot;
+  
   const extensionID = "viewerMD"; // ID should be equal to the directory name where the ext. is located
   const extensionDirectory = TSCORE.Config.getExtensionPath() + "/" + extensionID;
   let currentFilePath;
@@ -77,9 +76,9 @@ define(function(require, exports, module) {
     static getContent() {
       console.log("Not implemented");
     }
-
   }
 
+  exports.ViewerMD = ViewerMD;
   exports.init = ViewerMD.init;
   exports.getContent = ViewerMD.getContent;
   exports.setContent = ViewerMD.setContent;
